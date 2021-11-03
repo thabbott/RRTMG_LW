@@ -3,6 +3,13 @@
 !     revision:  $Revision$
 !     created:   $Date$
 !
+!----------------------------------------------------------------------------
+! Modification
+! thabbott 2 November 2021
+!   - add arguments for choosing full-spectrum vs. band-limited output:
+!     start_band and end_band for defining spectral interval for
+!     calculations, and wavenumber_range for receiving
+!     bracketing wavenumbers as output
 
        module rrtmg_lw_rad
 
@@ -104,7 +111,9 @@
              inflglw ,iceflglw,liqflglw,cldfr   , &
              taucld  ,cicewp  ,cliqwp  ,reice   ,reliq   , &
              tauaer  , &
+             start_band, end_band, &
              uflx    ,dflx    ,hr      ,uflxc   ,dflxc,  hrc, &
+             wavenumber_range, &
              duflx_dt,duflxc_dt )
 
 ! -------- Description --------
@@ -292,7 +301,10 @@
                                                       !    Dimensions: (ncol,nlay,nbndlw)
                                                       !   for future expansion 
                                                       !   (lw aerosols/scattering not yet available)
-
+       integer(kind=im), intent(in) :: start_band     ! first spectral band included in calculation
+                                                      !   must be between 1 and 16, inclusive
+       integer(kind=im), intent(in) :: end_band       ! final spectral band included in calculation
+                                                      !   must be between 1 and 16, inclusive
 
 ! ----- Output -----
 
@@ -308,6 +320,9 @@
                                                       !    Dimensions: (ncol,nlay+1)
       real(kind=rb), intent(out) :: hrc(:,:)          ! Clear sky longwave radiative heating rate (K/d)
                                                       !    Dimensions: (ncol,nlay)
+      real(kind=rb), intent(out) :: wavenumber_range(:)
+                                                      ! Wavenumber range of included spectral bands
+                                                      !    Dimensions: (2,)
 
 ! ----- Optional Output -----
       real(kind=rb), intent(out), optional :: duflx_dt(:,:)     
@@ -325,7 +340,7 @@
       integer(kind=im) :: nlayers             ! total number of layers
       integer(kind=im) :: istart              ! beginning band of calculation
       integer(kind=im) :: iend                ! ending band of calculation
-      integer(kind=im) :: iout                ! output option flag (inactive)
+      integer(kind=im) :: iout                ! output option flag (set to 99 for band-limited output)
       integer(kind=im) :: iaer                ! aerosol option flag
       integer(kind=im) :: iplon               ! column loop index
       integer(kind=im) :: imca                ! flag for mcica [0=off, 1=on]
@@ -433,14 +448,25 @@
                                               ! with respect to surface temperature
 
 !
+! Input validation
+      if (start_band.lt.1) stop 'start_band is less than 1'
+      if (start_band.gt.16) stop 'start_band is greater than 16'
+      if (end_band.lt.1) stop 'end_band is less than 1'
+      if (end_band.gt.16) stop 'end_band is greater than 16'
+
+!
 ! Initializations
 
       oneminus = 1._rb - 1.e-6_rb
       pi = 2._rb*asin(1._rb)
       fluxfac = pi * 2.e4_rb                  ! orig:   fluxfac = pi * 2.d4  
-      istart = 1
-      iend = 16
-      iout = 0
+      istart = start_band
+      iend = end_band
+      iout = 99
+
+! Set output wavenumber range
+      wavenumber_range(1) = wavenum1(istart)
+      wavenumber_range(2) = wavenum2(iend)
 
 ! Set imca to select calculation type:
 !  imca = 0, use standard forward model calculation
