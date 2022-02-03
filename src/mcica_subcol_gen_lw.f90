@@ -146,7 +146,7 @@
             decorr_len(:ncol) = decorr_con
          endif
          do i = 1, ncol
-            if (decorr_len(i) .ge. 0.0_rb)
+            if (decorr_len(i) .ge. 0.0_rb) then
                decorr_inv(i) = f_one / decorr_len(i)
             endif
          enddo
@@ -573,19 +573,17 @@
        ! CDF  is used to select which sub-columns are treated as cloudy relative to cloud fraction
        if (irng.eq.0) then 
           do isubcol = 1,nsubcol
-             do i = 1, ncol
-                do ilev = 1,nlayers
-                   call kissvec(seed1, seed2, seed3, seed4, rand_num)
-                   CDF(isubcol,i,ilev) = rand_num
-                   call kissvec(seed1, seed2, seed3, seed4, rand_num)
-                   CDF2(isubcol,i,ilev) = rand_num
-                end do
+             do ilev = 1,nlay
+                call kissvec(seed1, seed2, seed3, seed4, rand_num)
+                CDF(isubcol,:,ilev) = rand_num
+                call kissvec(seed1, seed2, seed3, seed4, rand_num)
+                CDF2(isubcol,:,ilev) = rand_num
              end do
           end do
        elseif (irng.eq.1) then
           do isubcol = 1, nsubcol
              do i = 1, ncol
-                do ilev = 1,nlayers
+                do ilev = 1,nlay
                    rand_num_mt = getRandomReal(randomNumbers)
                    CDF(isubcol,i,ilev) = rand_num_mt
                    rand_num_mt = getRandomReal(randomNumbers)
@@ -596,7 +594,7 @@
        endif
 
        ! generate vertical correlations in random number arrays: bottom to top
-       do ilev = 2,nlayers
+       do ilev = 2,nlay
           where (CDF2(:,:,ilev) < spread(alpha (:,ilev), dim=1, nCopies=nsubcol) )
              CDF(:,:,ilev) = CDF(:,:,ilev-1) 
           end where
@@ -613,19 +611,17 @@
        ! CDF  is used to select which sub-columns are treated as cloudy relative to cloud fraction
        if (irng.eq.0) then 
           do isubcol = 1,nsubcol
-             do i = 1, ncol
-                do ilev = 1,nlayers
-                   call kissvec(seed1, seed2, seed3, seed4, rand_num)
-                   CDF(isubcol,i,ilev) = rand_num
-                   call kissvec(seed1, seed2, seed3, seed4, rand_num)
-                   CDF2(isubcol,i,ilev) = rand_num
-                end do
+             do ilev = 1,nlay
+                call kissvec(seed1, seed2, seed3, seed4, rand_num)
+                CDF(isubcol,:,ilev) = rand_num
+                call kissvec(seed1, seed2, seed3, seed4, rand_num)
+                CDF2(isubcol,:,ilev) = rand_num
              end do
           end do
        elseif (irng.eq.1) then
           do isubcol = 1, nsubcol
              do i = 1, ncol
-                do ilev = 1,nlayers
+                do ilev = 1,nlay
                    rand_num_mt = getRandomReal(randomNumbers)
                    CDF(isubcol,i,ilev) = rand_num_mt
                    rand_num_mt = getRandomReal(randomNumbers)
@@ -636,7 +632,7 @@
        endif
 
        ! generate vertical correlations in random number arrays - bottom to top
-       do ilev = 2,nlayers
+       do ilev = 2,nlay
           where (CDF2(:,:,ilev) < spread(alpha (:,ilev), dim=1, nCopies=nsubcol) )
              CDF(:,:,ilev) = CDF(:,:,ilev-1) 
           end where
