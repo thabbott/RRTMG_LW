@@ -1,5 +1,4 @@
 build
 src
 *.so
-test.py
 test.pdf
